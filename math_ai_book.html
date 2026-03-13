@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>The Math Behind AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root{
+  --navy:#0a1628;
+  --navy2:#122040;
+  --navy3:#1a2f55;
+  --cyan:#00b4d8;
+  --cyan2:#48cae4;
+  --pink:#f72585;
+  --purple:#7209b7;
+  --yellow:#ffd60a;
+  --green:#06d6a0;
+  --text:#e0f2fe;
+  --text2:#90d5f0;
+  --parch:#fef9ef;
+  --parch2:#fef3d0;
+  --ink:#1a2035;
+  --ink2:#2d3a5a;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;overflow-x:hidden}
+body{
+  background:var(--navy);
+  font-family:'Space Grotesk',sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 12px 50px;
+}
+
+/* ── COVER ── */
+.cover{
+  width:min(660px,96vw);
+  background:linear-gradient(135deg,#0d1f3c 0%,#0a1628 50%,#111d36 100%);
+  border:2px solid var(--cyan);
+  border-radius:12px;
+  padding:clamp(30px,6vw,56px) clamp(20px,5vw,48px);
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  box-shadow:0 0 40px rgba(0,180,216,.15), 0 20px 60px rgba(0,0,0,.5);
+}
+.cover::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 30%, rgba(0,180,216,.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.cover-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(0,180,216,.05) 1px, transparent 1px),linear-gradient(90deg, rgba(0,180,216,.05) 1px, transparent 1px);
+  background-size:30px 30px;
+  pointer-events:none;
+}
+.cover-badge{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  color:#fff;font-size:clamp(8px,2vw,10px);
+  letter-spacing:4px;text-transform:uppercase;
+  padding:5px 16px;border-radius:20px;
+  margin-bottom:20px;font-weight:600;
+}
+.cover-icons{
+  font-size:clamp(28px,7vw,44px);margin-bottom:16px;
+  display:flex;justify-content:center;gap:16px;
+}
+.cover-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(24px,6vw,46px);
+  font-weight:700;color:#fff;
+  line-height:1.15;margin-bottom:12px;
+}
+.cover-title span{
+  background:linear-gradient(135deg,var(--cyan),var(--cyan2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.cover-sub{
+  font-size:clamp(11px,3vw,14px);color:var(--text2);
+  letter-spacing:1px;margin-bottom:28px;line-height:1.6;
+}
+.cover-chapters{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin:20px 0;text-align:left;
+}
+.cv-ch{
+  background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);
+  border-radius:8px;padding:10px 14px;
+}
+.cv-ch-num{font-size:10px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;font-weight:600}
+.cv-ch-name{font-size:clamp(11px,2.5vw,13px);color:var(--text);font-weight:500;margin-top:2px}
+.open-btn{
+  display:inline-block;margin-top:24px;
+  padding:clamp(11px,2.5vw,14px) clamp(28px,6vw,44px);
+  background:linear-gradient(135deg,var(--cyan) 0%,#0077b6 100%);
+  color:#fff;font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(11px,2.5vw,13px);font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;
+  border:none;cursor:pointer;border-radius:6px;
+  box-shadow:0 4px 20px rgba(0,180,216,.4);
+  transition:all .25s;-webkit-tap-highlight-color:transparent;
+}
+.open-btn:hover,.open-btn:active{transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,180,216,.5)}
+
+/* ── BOOK ── */
+.book{display:none;width:min(660px,96vw)}
+
+/* ── PAGES ── */
+.page{display:none;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.page.active{display:block}
+
+/* dark tech pages */
+.dark-page{background:linear-gradient(150deg,#0d1f3c 0%,#0a1628 60%,#0e1a30 100%);color:var(--text)}
+.dark-page .pg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,180,216,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,180,216,.04) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+
+/* light parchment pages */
+.light-page{background:linear-gradient(135deg,#fffdf5 0%,#fef9ef 50%,#fdf5e0 100%);color:var(--ink)}
+
+/* problem pages */
+.problem-page{background:linear-gradient(150deg,#0a1f1a 0%,#071510 60%,#0c1f18 100%);color:var(--text)}
+
+/* ── CHAPTER TITLE PAGES (dark) ── */
+.ch-title-pg{
+  padding:clamp(36px,7vw,60px) clamp(20px,5vw,48px) clamp(28px,5vw,48px);
+  text-align:center;position:relative;
+}
+.ch-number{
+  font-size:clamp(8px,2vw,10px);letter-spacing:5px;
+  color:var(--cyan);text-transform:uppercase;
+  font-weight:600;margin-bottom:14px;
+}
+.ch-icon-big{font-size:clamp(44px,10vw,64px);margin-bottom:16px;display:block}
+.ch-name{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(22px,5.5vw,38px);font-weight:700;
+  color:#fff;line-height:1.25;margin-bottom:8px;
+}
+.ch-name span{color:var(--cyan)}
+.ch-tag{
+  display:inline-flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  margin:12px 0 20px;
+}
+.tag{
+  background:rgba(0,180,216,.12);border:1px solid rgba(0,180,216,.25);
+  color:var(--cyan2);font-size:clamp(9px,2vw,11px);
+  padding:4px 12px;border-radius:20px;font-weight:500;
+}
+.ch-divider{width:60px;height:2px;background:linear-gradient(to right,transparent,var(--cyan),transparent);margin:0 auto 20px}
+.ch-intro-text{
+  font-size:clamp(13px,3.5vw,16px);color:var(--text2);
+  line-height:1.8;max-width:500px;margin:0 auto;
+}
+
+/* ── CONCEPT CARD ── */
+.concept-card{
+  background:rgba(0,180,216,.07);
+  border:1px solid rgba(0,180,216,.2);
+  border-radius:10px;padding:clamp(14px,3vw,20px);
+  margin:16px 0;
+}
+.concept-card h4{
+  font-size:clamp(11px,2.5vw,13px);letter-spacing:3px;
+  color:var(--cyan);text-transform:uppercase;
+  font-weight:600;margin-bottom:10px;
+}
+.concept-card p,.concept-card li{
+  font-size:clamp(13px,3.5vw,15px);color:var(--text2);
+  line-height:1.8;
+}
+.concept-card ul{padding-left:18px}
+.concept-card li{margin-bottom:4px}
+
+/* ── STORY / PARABLE PAGES (light) ── */
+.story-pg{padding:clamp(24px,5vw,44px) clamp(18px,5vw,48px) 0}
+.story-label{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:#fff;font-size:clamp(8px,2vw,10px);
+  letter-spacing:3px;text-transform:uppercase;
+  padding:4px 14px;border-radius:20px;
+  font-weight:600;margin-bottom:16px;
+}
+.story-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(18px,5vw,26px);color:var(--ink);
+  margin-bottom:16px;line-height:1.3;
+}
+.story-body{font-size:clamp(13px,3.5vw,16px);color:var(--ink2);line-height:1.9;margin-bottom:14px;text-align:justify}
+.story-body strong{color:var(--purple);font-weight:600}
+.household-box{
+  background:linear-gradient(135deg,rgba(114,9,183,.06),rgba(247,37,133,.04));
+  border-left:3px solid var(--purple);
+  border-radius:0 8px 8px 0;
+  padding:clamp(12px,3vw,18px) clamp(14px,3vw,20px);
+  margin:16px 0;
+}
+.household-box h4{
+  font-size:clamp(10px,2.5vw,12px);letter-spacing:3px;
+  color:var(--purple);text-transform:uppercase;
+  font-weight:600;margin-bottom:10px;
+}
+.household-box p,.household-box li{
+  font-size:clamp(12px,3vw,15px);color:var(--ink2);line-height:1.8;
+}
+.household-box ul{padding-left:16px}
+.household-box li{margin-bottom:4px}
+
+/* analogy visual */
+.analogy{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:10px;
+  background:rgba(114,9,183,.05);
+  border:1px solid rgba(114,9,183,.15);
+  border-radius:8px;padding:14px 16px;margin:14px 0;
+  font-size:clamp(12px,3vw,14px);
+}
+.analogy-item{text-align:center}
+.analogy-icon{font-size:clamp(22px,6vw,32px);display:block;margin-bottom:4px}
+.analogy-label{color:var(--purple);font-weight:600;font-size:clamp(11px,2.5vw,13px)}
+.analogy-sub{color:var(--ink2);font-size:clamp(10px,2.5vw,12px);margin-top:2px}
+.analogy-arrow{font-size:clamp(18px,4vw,24px);color:var(--purple);opacity:.5}
+
+/* ── PROBLEM PAGES (green-dark) ── */
+.problem-pg{padding:clamp(24px,5vw,44px) clamp(18px,5vw,48px) 0}
+.prob-label{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--green),#0098769e);
+  color:#fff;font-size:clamp(8px,2vw,10px);
+  letter-spacing:3px;text-transform:uppercase;
+  padding:4px 14px;border-radius:20px;
+  font-weight:600;margin-bottom:16px;
+}
+.prob-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(16px,4.5vw,22px);color:#fff;
+  margin-bottom:18px;
+}
+.prob-item{
+  background:rgba(6,214,160,.07);
+  border:1px solid rgba(6,214,160,.2);
+  border-radius:8px;padding:clamp(12px,3vw,16px);
+  margin-bottom:12px;
+}
+.prob-item h4{
+  font-size:clamp(10px,2.5vw,12px);letter-spacing:2px;
+  color:var(--green);text-transform:uppercase;
+  font-weight:600;margin-bottom:8px;
+}
+.prob-item p{font-size:clamp(12px,3vw,14px);color:var(--text2);line-height:1.8}
+.prob-item .mono{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(11px,2.5vw,13px);
+  color:var(--yellow);display:block;margin-top:6px;
+  background:rgba(0,0,0,.3);padding:8px 12px;border-radius:4px;
+}
+.ai-box{
+  background:rgba(255,214,10,.06);
+  border:1px solid rgba(255,214,10,.2);
+  border-radius:8px;padding:clamp(12px,3vw,16px);
+  margin:12px 0;
+}
+.ai-box h4{
+  font-size:clamp(10px,2.5vw,12px);letter-spacing:2px;
+  color:var(--yellow);text-transform:uppercase;
+  font-weight:600;margin-bottom:8px;
+}
+.ai-box p,.ai-box li{font-size:clamp(12px,3vw,14px);color:var(--text2);line-height:1.8}
+.ai-box ul{padding-left:16px}
+.ai-box li{margin-bottom:4px}
+.ai-real{
+  background:rgba(247,37,133,.07);
+  border:1px solid rgba(247,37,133,.2);
+  border-radius:8px;padding:clamp(10px,2.5vw,14px);
+  margin:10px 0;
+}
+.ai-real h4{font-size:clamp(10px,2vw,11px);letter-spacing:2px;color:var(--pink);text-transform:uppercase;font-weight:600;margin-bottom:6px}
+.ai-real p{font-size:clamp(11px,2.8vw,13px);color:var(--text2);line-height:1.75}
+
+/* ── TOC ── */
+.toc-pg{padding:clamp(28px,6vw,50px) clamp(18px,5vw,48px) 0}
+.toc-hdr{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(20px,5vw,30px);color:#fff;
+  margin-bottom:4px;
+}
+.toc-sub{font-size:clamp(9px,2vw,11px);letter-spacing:4px;color:var(--cyan);text-transform:uppercase;font-weight:600;margin-bottom:28px}
+.toc-ch{
+  display:flex;align-items:center;gap:14px;
+  padding:clamp(12px,3vw,16px) 12px;
+  border-bottom:1px solid rgba(0,180,216,.1);
+  cursor:pointer;transition:background .2s;border-radius:8px;
+  -webkit-tap-highlight-color:transparent;
+}
+.toc-ch:hover,.toc-ch:active{background:rgba(0,180,216,.06)}
+.toc-emoji{font-size:clamp(20px,5vw,26px);flex-shrink:0}
+.toc-info{flex:1;min-width:0}
+.toc-info strong{display:block;font-size:clamp(12px,3vw,15px);color:#fff;font-weight:600}
+.toc-info span{font-size:clamp(10px,2.5vw,13px);color:var(--text2);opacity:.75}
+.toc-pg-num{font-size:clamp(10px,2.5vw,12px);color:var(--cyan);font-weight:600;flex-shrink:0}
+
+/* ── FOOTER ── */
+.pg-footer{
+  padding:clamp(12px,3vw,16px) clamp(18px,4vw,48px) clamp(14px,3vw,20px);
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:clamp(9px,2vw,11px);letter-spacing:1px;font-weight:600;
+}
+.dark-page .pg-footer,.problem-page .pg-footer{
+  border-top:1px solid rgba(0,180,216,.15);color:var(--cyan);
+}
+.light-page .pg-footer{
+  border-top:1px solid rgba(114,9,183,.15);color:var(--purple);
+}
+
+/* ── FINAL PAGE ── */
+.final-pg{
+  padding:clamp(40px,8vw,70px) clamp(20px,5vw,52px);
+  text-align:center;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:400px;
+}
+.final-icon{font-size:clamp(48px,12vw,72px);margin-bottom:16px}
+.final-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(22px,6vw,34px);color:#fff;margin-bottom:12px;
+}
+.final-text{font-size:clamp(13px,3.5vw,16px);color:var(--text2);line-height:1.85;max-width:480px;margin-bottom:20px}
+.back-btn{
+  padding:clamp(10px,2.5vw,12px) clamp(22px,5vw,34px);
+  background:transparent;color:var(--cyan);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(10px,2.5vw,12px);letter-spacing:3px;text-transform:uppercase;
+  border:1px solid var(--cyan);cursor:pointer;border-radius:6px;
+  transition:all .25s;font-weight:600;
+  -webkit-tap-highlight-color:transparent;
+}
+.back-btn:hover,.back-btn:active{background:rgba(0,180,216,.1)}
+
+/* ── NAV ── */
+.nav-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:14px;gap:10px;width:min(660px,96vw);
+}
+.nav-btn{
+  padding:clamp(10px,2.5vw,12px) clamp(14px,3.5vw,22px);
+  background:linear-gradient(135deg,var(--cyan),#0077b6);
+  color:#fff;font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(9px,2.5vw,11px);font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  border:none;cursor:pointer;border-radius:6px;
+  box-shadow:0 2px 10px rgba(0,180,216,.3);
+  transition:all .22s;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-btn:hover,.nav-btn:active{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,180,216,.4)}
+.nav-btn:disabled{opacity:.25;cursor:not-allowed;transform:none}
+.nav-prog{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(9px,2.5vw,11px);
+  color:var(--text2);text-align:center;flex:1;letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ COVER ═══ -->
+<div id="cover" class="cover" onclick="openBook()">
+<div class="cover-grid"></div>
+<div class="cover-badge">A Complete Learning Guide</div>
+<div class="cover-icons">&#129516; &#128202; &#127922; &#127919;</div>
+<div class="cover-title">The <span>Math Behind</span><br>Artificial Intelligence</div>
+<div class="cover-sub">Four Essential Concepts Explained<br>Through Simple Household Stories</div>
+<div class="cover-chapters">
+  <div class="cv-ch"><div class="cv-ch-num">Chapter I</div><div class="cv-ch-name">Linear Algebra</div></div>
+  <div class="cv-ch"><div class="cv-ch-num">Chapter II</div><div class="cv-ch-name">Calculus</div></div>
+  <div class="cv-ch"><div class="cv-ch-num">Chapter III</div><div class="cv-ch-name">Probability &amp; Stats</div></div>
+  <div class="cv-ch"><div class="cv-ch-num">Chapter IV</div><div class="cv-ch-name">Optimization</div></div>
+</div>
+<button class="open-btn">Begin Reading</button>
+</div>
+
+<!-- ═══ BOOK ═══ -->
+<div id="book" class="book">
+
+<!-- P0: TOC -->
+<div class="page dark-page active" id="p0">
+<div class="pg-grid"></div>
+<div class="toc-pg">
+<div class="toc-hdr">Contents</div>
+<div class="toc-sub">The Four Pillars of AI Mathematics</div>
+<div class="toc-ch" onclick="goTo(2)"><span class="toc-emoji">&#129516;</span><div class="toc-info"><strong>Linear Algebra</strong><span>Vectors, matrices &amp; transformations</span></div><span class="toc-pg-num">03</span></div>
+<div class="toc-ch" onclick="goTo(5)"><span class="toc-emoji">&#9956;</span><div class="toc-info"><strong>Calculus</strong><span>Gradients, learning &amp; backpropagation</span></div><span class="toc-pg-num">06</span></div>
+<div class="toc-ch" onclick="goTo(8)"><span class="toc-emoji">&#127922;</span><div class="toc-info"><strong>Probability &amp; Statistics</strong><span>Uncertainty &amp; Bayesian inference</span></div><span class="toc-pg-num">09</span></div>
+<div class="toc-ch" onclick="goTo(11)"><span class="toc-emoji">&#127919;</span><div class="toc-info"><strong>Optimization Theory</strong><span>Finding the best among millions</span></div><span class="toc-pg-num">12</span></div>
+</div>
+<div class="pg-footer"><span>Page 1</span><span>&#9670;</span><span>The Math Behind AI</span></div>
+</div>
+
+<!-- P1: Intro -->
+<div class="page dark-page" id="p1">
+<div class="pg-grid"></div>
+<div class="ch-title-pg" style="text-align:left">
+<div class="ch-number">Introduction</div>
+<div class="ch-name" style="font-size:clamp(18px,5vw,28px);margin-bottom:16px">Why Does AI Need Mathematics?</div>
+<div class="concept-card">
+  <h4>&#129504; The Big Picture</h4>
+  <p>Every time an AI recognizes your face, translates a sentence, or recommends a movie — it is doing mathematics. Not magic. Just four core areas of math, working together at extraordinary speed.</p>
+</div>
+<div class="concept-card">
+  <h4>&#127968; Think of it like a kitchen</h4>
+  <p>A chef doesn&rsquo;t need to understand chemistry to cook — but a <em>great</em> chef who understands chemistry can do things others cannot. Similarly, understanding AI&rsquo;s mathematics lets you build systems others only dream of.</p>
+</div>
+<div class="concept-card">
+  <h4>&#128218; How This Book Works</h4>
+  <ul>
+    <li><strong>Concept</strong> — The idea, simply explained</li>
+    <li><strong>Story</strong> — A household parable to make it real</li>
+    <li><strong>Problems</strong> — Practice to test your understanding</li>
+    <li><strong>AI in Action</strong> — Where it lives inside real AI</li>
+  </ul>
+</div>
+</div>
+<div class="pg-footer"><span>Page 2</span><span>&#9670;</span><span>Introduction</span></div>
+</div>
+
+<!-- P2: Linear Algebra TITLE -->
+<div class="page dark-page" id="p2">
+<div class="pg-grid"></div>
+<div class="ch-title-pg">
+<div class="ch-number">Chapter One</div>
+<span class="ch-icon-big">&#129516;</span>
+<div class="ch-name">Linear <span>Algebra</span></div>
+<div class="ch-tag">
+  <span class="tag">Vectors</span>
+  <span class="tag">Matrices</span>
+  <span class="tag">Transformations</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-intro-text">How data is represented as numbers arranged in lists and grids — and how those numbers are moved, stretched, and transformed to reveal hidden patterns.</div>
+<div class="concept-card" style="text-align:left;margin-top:20px">
+  <h4>&#128161; Core Concept</h4>
+  <p><strong style="color:var(--cyan)">A vector</strong> is simply a list of numbers: [3, 5, 2]. It describes a point in space, a pixel&rsquo;s colour, or a word&rsquo;s meaning.<br><br>
+  <strong style="color:var(--cyan)">A matrix</strong> is a grid of numbers. It is a machine that transforms vectors — rotating them, stretching them, or projecting them into new dimensions.<br><br>
+  <strong style="color:var(--cyan)">A transformation</strong> is the act of applying a matrix to a vector, producing a new vector.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 3</span><span>&#9670;</span><span>Chapter I — Linear Algebra</span></div>
+</div>
+
+<!-- P3: Linear Algebra STORY -->
+<div class="page light-page" id="p3">
+<div class="story-pg">
+<div class="story-label">&#127968; The Household Parable</div>
+<div class="story-title">&#x1F6D2; Maya&rsquo;s Shopping Basket</div>
+<div class="story-body">Maya goes to the market every week. Her shopping list is always the same structure: <strong>[apples, bread, milk, eggs]</strong>. This week she writes <strong>[3, 2, 1, 6]</strong> — meaning 3 apples, 2 loaves, 1 litre of milk, 6 eggs.</div>
+<div class="story-body">That list of four numbers? That is a <strong>vector</strong>. It perfectly describes her shopping in a compact, mathematical form.</div>
+<div class="analogy">
+  <div class="analogy-item"><span class="analogy-icon">&#128722;</span><div class="analogy-label">Shopping List</div><div class="analogy-sub">[3, 2, 1, 6]</div></div>
+  <div class="analogy-arrow">&#8594;</div>
+  <div class="analogy-item"><span class="analogy-icon">&#129516;</span><div class="analogy-label">Vector</div><div class="analogy-sub">Data Point</div></div>
+</div>
+<div class="story-body">The market has a <strong>price list</strong>: apples ₹5 each, bread ₹30, milk ₹50, eggs ₹8 each. To find Maya&rsquo;s total bill, she multiplies each item by its price and adds them up. That multiplication is <strong>dot product</strong> — a fundamental matrix operation.</div>
+<div class="household-box">
+  <h4>&#127795; The Matrix as a Recipe Converter</h4>
+  <p>Imagine a recipe book that converts Indian measures to American ones. Every cup becomes 240ml, every tablespoon 15ml. This conversion grid is a <strong>matrix</strong>. Apply it to any recipe (vector) and you instantly get the converted recipe (new vector). AI does exactly this — billions of times per second.</p>
+</div>
+<div class="story-body">When you listen to music and the app changes the equaliser, it is applying a <strong>transformation matrix</strong> to the audio vector. When a photo filter makes your image warmer — it multiplied the colour vector [R, G, B] by a colour transformation matrix.</div>
+</div>
+<div class="pg-footer"><span>Page 4</span><span>&#9670;</span><span>Chapter I — Story</span></div>
+</div>
+
+<!-- P4: Linear Algebra PROBLEMS + AI -->
+<div class="page problem-page" id="p4">
+<div class="problem-pg">
+<div class="prob-label">&#9997; Practice Problems</div>
+<div class="prob-title">Test Your Understanding</div>
+<div class="prob-item">
+  <h4>&#9312; Vector Basics</h4>
+  <p>Your family&rsquo;s daily fruit bowl contains 2 bananas, 4 apples, 0 mangoes, 3 oranges. Write this as a vector. What is its &ldquo;dimension&rdquo;?</p>
+  <span class="mono">Answer: [2, 4, 0, 3] — dimension = 4 (four types of fruit)</span>
+</div>
+<div class="prob-item">
+  <h4>&#9313; Dot Product</h4>
+  <p>You buy [2, 1, 3] kg of rice, dal, and sugar. Prices are [₹60, ₹100, ₹45] per kg. What is your total bill? (Hint: multiply each pair and add)</p>
+  <span class="mono">Answer: (2×60) + (1×100) + (3×45) = 120+100+135 = ₹355</span>
+</div>
+<div class="prob-item">
+  <h4>&#9314; Transformation</h4>
+  <p>A recipe uses [2 cups flour, 1 cup sugar]. A scaling matrix doubles everything. What are the new quantities?</p>
+  <span class="mono">Answer: [4 cups flour, 2 cups sugar] — you just applied a matrix!</span>
+</div>
+<div class="ai-box">
+  <h4>&#129504; How AI Uses Linear Algebra</h4>
+  <ul>
+    <li><strong>Images</strong> — A 1080p photo is a matrix of 1920×1080 numbers</li>
+    <li><strong>Words</strong> — Each word is a vector of ~300 numbers (word2vec)</li>
+    <li><strong>Neural Networks</strong> — Every layer multiplies your data by a weight matrix</li>
+    <li><strong>Face Recognition</strong> — Your face is transformed into a 128-dimension vector</li>
+  </ul>
+</div>
+<div class="ai-real">
+  <h4>&#127758; Real AI Example</h4>
+  <p><strong>ChatGPT &amp; Large Language Models:</strong> Every word you type is converted to a vector of ~12,288 numbers. These vectors are then multiplied through 96 layers of matrices (transformers). The output vector is converted back into the most likely next word. You are talking to a machine that is doing matrix multiplication 96 times per token.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 5</span><span>&#9670;</span><span>Chapter I — Problems &amp; AI</span></div>
+</div>
+
+<!-- P5: Calculus TITLE -->
+<div class="page dark-page" id="p5">
+<div class="pg-grid"></div>
+<div class="ch-title-pg">
+<div class="ch-number">Chapter Two</div>
+<span class="ch-icon-big">&#9956;</span>
+<div class="ch-name">Calculus &amp; <span>Gradients</span></div>
+<div class="ch-tag">
+  <span class="tag">Derivatives</span>
+  <span class="tag">Gradients</span>
+  <span class="tag">Backpropagation</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-intro-text">How AI systems learn from their mistakes — measuring the slope of errors and adjusting step by step until they find the answer.</div>
+<div class="concept-card" style="text-align:left;margin-top:20px">
+  <h4>&#128161; Core Concept</h4>
+  <p><strong style="color:var(--cyan)">A derivative</strong> measures how fast something is changing. If you drive at 60 km/h, your speed is the derivative of your position.<br><br>
+  <strong style="color:var(--cyan)">A gradient</strong> is the multi-dimensional version — it points in the direction of steepest increase, like an arrow pointing uphill.<br><br>
+  <strong style="color:var(--cyan)">Gradient descent</strong> means walking downhill — opposite to the gradient — to find the lowest point (the minimum error).<br><br>
+  <strong style="color:var(--cyan)">Backpropagation</strong> is how neural networks calculate gradients for all their weights at once using the chain rule.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 6</span><span>&#9670;</span><span>Chapter II — Calculus</span></div>
+</div>
+
+<!-- P6: Calculus STORY -->
+<div class="page light-page" id="p6">
+<div class="story-pg">
+<div class="story-label">&#127968; The Household Parable</div>
+<div class="story-title">&#9975; The Blindfolded Hiker</div>
+<div class="story-body">Imagine you are blindfolded in the middle of a hilly landscape. Your only task: reach the lowest valley. You cannot see anything. What do you do?</div>
+<div class="story-body">Simple. <strong>Feel the ground under your feet.</strong> If the ground slopes down to your left, take a step left. If it slopes down ahead of you, step forward. Keep doing this, one careful step at a time. Eventually, you will reach the valley floor.</div>
+<div class="analogy">
+  <div class="analogy-item"><span class="analogy-icon">&#9968;</span><div class="analogy-label">Slope of Ground</div><div class="analogy-sub">Direction of error</div></div>
+  <div class="analogy-arrow">&#8594;</div>
+  <div class="analogy-item"><span class="analogy-icon">&#128200;</span><div class="analogy-label">Gradient</div><div class="analogy-sub">Derivative of loss</div></div>
+</div>
+<div class="story-body">This is <strong>exactly</strong> how AI learns. The &ldquo;hilly landscape&rdquo; is the error function — a mathematical surface where each point represents how wrong the AI is. The AI takes steps downhill (gradient descent) until it reaches the valley: the point of minimum error.</div>
+<div class="household-box">
+  <h4>&#127859; The Over-Salted Soup Analogy</h4>
+  <p>You are cooking soup and it is too salty. You taste it (measure the error). You add a little water (adjust in the direction that reduces error). You taste again. Adjust again. This loop — <strong>taste → measure error → adjust → repeat</strong> — is gradient descent. AI does this millions of times with numbers instead of salt.</p>
+</div>
+<div class="story-body">The <strong>learning rate</strong> is the size of each step. Too large: you overshoot the valley and bounce around. Too small: it takes forever to reach the bottom. Finding the right learning rate is one of the most important jobs in building AI.</div>
+</div>
+<div class="pg-footer"><span>Page 7</span><span>&#9670;</span><span>Chapter II — Story</span></div>
+</div>
+
+<!-- P7: Calculus PROBLEMS + AI -->
+<div class="page problem-page" id="p7">
+<div class="problem-pg">
+<div class="prob-label">&#9997; Practice Problems</div>
+<div class="prob-title">Test Your Understanding</div>
+<div class="prob-item">
+  <h4>&#9312; Understanding Slope</h4>
+  <p>Your morning walk covers 6 km in 1 hour, then 4 km in the next hour. Is your speed increasing or decreasing? What is the &ldquo;derivative&rdquo; of your distance?</p>
+  <span class="mono">Speed = 6 km/h then 4 km/h → decreasing. Derivative = change in speed = -2 km/h²</span>
+</div>
+<div class="prob-item">
+  <h4>&#9313; Gradient Intuition</h4>
+  <p>AI predicts your house has 3 rooms. It actually has 5. Error = (3-5)² = 4. If the AI increases its prediction by 1 (to 4 rooms), error = (4-5)² = 1. Which direction should it adjust?</p>
+  <span class="mono">Increase the prediction! Error decreased from 4 → 1. The gradient pointed upward at 3, so move right (increase).</span>
+</div>
+<div class="prob-item">
+  <h4>&#9314; Learning Rate</h4>
+  <p>If each step toward the correct answer overshoots and makes the AI oscillate back and forth, what should you change about the learning rate?</p>
+  <span class="mono">Decrease the learning rate — smaller steps prevent overshooting the minimum.</span>
+</div>
+<div class="ai-box">
+  <h4>&#129504; How AI Uses Calculus</h4>
+  <ul>
+    <li><strong>Training</strong> — Every neural network learns via gradient descent</li>
+    <li><strong>Backprop</strong> — Chain rule calculates gradients for all 175 billion parameters (GPT-3)</li>
+    <li><strong>Optimization</strong> — Adam, SGD, RMSProp are all gradient-based algorithms</li>
+    <li><strong>Loss functions</strong> — Measure &ldquo;how wrong&rdquo; the AI is in mathematical terms</li>
+  </ul>
+</div>
+<div class="ai-real">
+  <h4>&#127758; Real AI Example</h4>
+  <p><strong>AlphaGo (DeepMind, 2016):</strong> Defeated the world Go champion using a neural network trained with gradient descent. The network played millions of games against itself, each time calculating gradients and adjusting billions of weights. The &ldquo;blindfolded hiker&rdquo; eventually found a valley of strategy no human had ever explored.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 8</span><span>&#9670;</span><span>Chapter II — Problems &amp; AI</span></div>
+</div>
+
+<!-- P8: Probability TITLE -->
+<div class="page dark-page" id="p8">
+<div class="pg-grid"></div>
+<div class="ch-title-pg">
+<div class="ch-number">Chapter Three</div>
+<span class="ch-icon-big">&#127922;</span>
+<div class="ch-name">Probability &amp; <span>Statistics</span></div>
+<div class="ch-tag">
+  <span class="tag">Uncertainty</span>
+  <span class="tag">Bayesian Inference</span>
+  <span class="tag">Distributions</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-intro-text">How AI makes confident predictions in an uncertain world — combining past knowledge with new evidence to form the most accurate beliefs possible.</div>
+<div class="concept-card" style="text-align:left;margin-top:20px">
+  <h4>&#128161; Core Concept</h4>
+  <p><strong style="color:var(--cyan)">Probability</strong> is a number between 0 and 1 expressing how likely something is. 0 = impossible, 1 = certain.<br><br>
+  <strong style="color:var(--cyan)">Bayes&rsquo; Theorem</strong> says: your belief after seeing evidence = (your prior belief × how likely the evidence is given the belief) ÷ total probability of the evidence.<br><br>
+  <strong style="color:var(--cyan)">Statistics</strong> is the science of learning patterns from data — means, standard deviations, correlations, distributions.<br><br>
+  <strong style="color:var(--cyan)">In AI:</strong> every output of a language model or classifier is a probability distribution over possible answers.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 9</span><span>&#9670;</span><span>Chapter III — Probability</span></div>
+</div>
+
+<!-- P9: Probability STORY -->
+<div class="page light-page" id="p9">
+<div class="story-pg">
+<div class="story-label">&#127968; The Household Parable</div>
+<div class="story-title">&#128488; Grandma&rsquo;s Weather Wisdom</div>
+<div class="story-body">Every morning, Grandma predicts the weather. She has 40 years of experience. She knows that when the sky is cloudy AND the wind blows from the east AND her joints ache — it rains 85% of the time.</div>
+<div class="story-body">This is <strong>Bayesian inference</strong>. Grandma has a <em>prior belief</em> (how often it usually rains: 30%). She updates this belief when she sees new <em>evidence</em> (clouds + east wind + aching joints). Her updated prediction — 85% chance of rain — is the <em>posterior probability</em>.</div>
+<div class="analogy">
+  <div class="analogy-item"><span class="analogy-icon">&#129504;</span><div class="analogy-label">Prior Belief</div><div class="analogy-sub">30% rain usually</div></div>
+  <div class="analogy-arrow">+</div>
+  <div class="analogy-item"><span class="analogy-icon">&#9928;&#65039;</span><div class="analogy-label">New Evidence</div><div class="analogy-sub">Clouds + east wind</div></div>
+</div>
+<div class="story-body">Every AI spam filter works exactly like Grandma. It starts with a prior belief (most emails are not spam: 97%). When it sees the word &ldquo;FREE MONEY!!&rdquo; in capital letters with five exclamation marks, it updates its belief to 99.9% spam.</div>
+<div class="household-box">
+  <h4>&#127828; The Toast Burning Problem</h4>
+  <p>You know your toaster burns toast 20% of the time when you leave it on &ldquo;high.&rdquo; This morning you smell something. Given that you <em>do</em> smell burning, what&rsquo;s the probability your toast is burnt? Bayesian reasoning lets you update your estimate — turning a vague worry into a precise number. AI medical diagnosis works exactly this way: given these symptoms, what is the probability of each disease?</p>
+</div>
+<div class="story-body">The word &ldquo;statistics&rdquo; comes from the German word for &ldquo;state&rdquo; — it was originally invented to count people and resources for governments. Today it tells AI whether a tumour is likely malignant, whether a credit card transaction is fraudulent, or whether a sentence is in French or Spanish.</div>
+</div>
+<div class="pg-footer"><span>Page 10</span><span>&#9670;</span><span>Chapter III — Story</span></div>
+</div>
+
+<!-- P10: Probability PROBLEMS + AI -->
+<div class="page problem-page" id="p10">
+<div class="problem-pg">
+<div class="prob-label">&#9997; Practice Problems</div>
+<div class="prob-title">Test Your Understanding</div>
+<div class="prob-item">
+  <h4>&#9312; Basic Probability</h4>
+  <p>In a bag of 10 biscuits, 6 are chocolate and 4 are plain. You pick one randomly. What is the probability it is chocolate?</p>
+  <span class="mono">P(chocolate) = 6/10 = 0.6 = 60%</span>
+</div>
+<div class="prob-item">
+  <h4>&#9313; Conditional Probability</h4>
+  <p>It rains 40% of days in July. When it rains, school closes 70% of the time. What is the probability of both rain AND school being closed tomorrow?</p>
+  <span class="mono">P(rain AND closed) = 0.40 × 0.70 = 0.28 = 28%</span>
+</div>
+<div class="prob-item">
+  <h4>&#9314; Updating Beliefs</h4>
+  <p>You think your friend is lying 10% of the time (prior). You then notice they avoided eye contact. People avoiding eye contact when lying = 80% of the time. Update your belief: are they more likely lying now?</p>
+  <span class="mono">Yes! New evidence (eye contact) significantly raises the posterior probability of lying.</span>
+</div>
+<div class="ai-box">
+  <h4>&#129504; How AI Uses Probability</h4>
+  <ul>
+    <li><strong>Language Models</strong> — Output is a probability over 50,000 possible next words</li>
+    <li><strong>Medical AI</strong> — P(disease | symptoms) using Bayesian networks</li>
+    <li><strong>Spam Filters</strong> — Naive Bayes classifier (Gmail, Outlook)</li>
+    <li><strong>Self-driving Cars</strong> — Probability distributions over pedestrian positions</li>
+    <li><strong>Recommenders</strong> — P(you&rsquo;ll like this movie | your history)</li>
+  </ul>
+</div>
+<div class="ai-real">
+  <h4>&#127758; Real AI Example</h4>
+  <p><strong>Google&rsquo;s Medical AI (2020):</strong> A deep learning model trained on 100,000 chest X-rays uses probabilistic inference to detect lung cancer with higher accuracy than radiologists. For each scan it outputs P(cancer) as a number — not a yes/no — allowing doctors to see its confidence level and make better decisions alongside the AI.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 11</span><span>&#9670;</span><span>Chapter III — Problems &amp; AI</span></div>
+</div>
+
+<!-- P11: Optimization TITLE -->
+<div class="page dark-page" id="p11">
+<div class="pg-grid"></div>
+<div class="ch-title-pg">
+<div class="ch-number">Chapter Four</div>
+<span class="ch-icon-big">&#127919;</span>
+<div class="ch-name">Optimization <span>Theory</span></div>
+<div class="ch-tag">
+  <span class="tag">Objective Functions</span>
+  <span class="tag">Constraints</span>
+  <span class="tag">Global Minima</span>
+</div>
+<div class="ch-divider"></div>
+<div class="ch-intro-text">How AI finds the single best solution among billions of possibilities — navigating vast mathematical landscapes with mathematical precision.</div>
+<div class="concept-card" style="text-align:left;margin-top:20px">
+  <h4>&#128161; Core Concept</h4>
+  <p><strong style="color:var(--cyan)">An objective function</strong> (or loss function) is a mathematical formula that measures &ldquo;how good&rdquo; a solution is. AI tries to minimize it.<br><br>
+  <strong style="color:var(--cyan)">Constraints</strong> are the rules your solution must obey (e.g., budget limit, weight limit, time limit).<br><br>
+  <strong style="color:var(--cyan)">A local minimum</strong> is a valley — but there may be a deeper valley elsewhere (global minimum).<br><br>
+  <strong style="color:var(--cyan)">Modern AI</strong> uses Adam, SGD, LBFGS and other algorithms to navigate these landscapes for problems with billions of variables.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 12</span><span>&#9670;</span><span>Chapter IV — Optimization</span></div>
+</div>
+
+<!-- P12: Optimization STORY -->
+<div class="page light-page" id="p12">
+<div class="story-pg">
+<div class="story-label">&#127968; The Household Parable</div>
+<div class="story-title">&#127974; Packing the Perfect Suitcase</div>
+<div class="story-body">You are travelling tomorrow and have a suitcase with a weight limit of 20 kg. You have 15 items to choose from — clothes, books, gadgets, medicines — each with a weight and a &ldquo;usefulness score.&rdquo; You want to maximize usefulness without exceeding 20 kg.</div>
+<div class="story-body">This is an <strong>optimization problem</strong>. Your <em>objective function</em> is total usefulness. Your <em>constraint</em> is the 20 kg weight limit. The <em>solution</em> is the specific set of items that gives the highest usefulness while obeying the constraint.</div>
+<div class="analogy">
+  <div class="analogy-item"><span class="analogy-icon">&#129524;</span><div class="analogy-label">Best Packing</div><div class="analogy-sub">Max usefulness</div></div>
+  <div class="analogy-arrow">&#8596;</div>
+  <div class="analogy-item"><span class="analogy-icon">&#129504;</span><div class="analogy-label">Trained Model</div><div class="analogy-sub">Min error</div></div>
+</div>
+<div class="story-body">Now imagine not 15 items but <strong>175 billion items</strong> — that is how many &ldquo;weights&rdquo; GPT-3 optimizes. Each training step adjusts all of them slightly, guided by gradients, until the model finds the best combination.</div>
+<div class="household-box">
+  <h4>&#128205; The Fastest Route to School</h4>
+  <p>Every morning Google Maps solves an optimization problem: given road speeds, traffic, traffic lights, and turns — find the route with <strong>minimum travel time</strong>. There may be thousands of possible routes. The optimization algorithm (Dijkstra&rsquo;s, A*) finds the best one in milliseconds. Reinforce learning AI does the same — finding the best sequence of actions to maximize a reward.</p>
+</div>
+<div class="story-body">The <strong>danger of local minima</strong>: imagine you are searching for the lowest point blindfolded on a hilly landscape. You might step into a small dip and think you&rsquo;ve found the bottom — but the true lowest valley is far away. Modern AI techniques like <em>momentum</em>, <em>random restarts</em>, and <em>learning rate schedules</em> help escape these traps.</div>
+</div>
+<div class="pg-footer"><span>Page 13</span><span>&#9670;</span><span>Chapter IV — Story</span></div>
+</div>
+
+<!-- P13: Optimization PROBLEMS + AI -->
+<div class="page problem-page" id="p13">
+<div class="problem-pg">
+<div class="prob-label">&#9997; Practice Problems</div>
+<div class="prob-title">Test Your Understanding</div>
+<div class="prob-item">
+  <h4>&#9312; Objective Function</h4>
+  <p>You want to bake the most delicious cake. You have ₹200 to spend on ingredients. You rate each ingredient&rsquo;s contribution to deliciousness out of 10. How would you write this as an optimization problem?</p>
+  <span class="mono">Maximize: Σ(deliciousness_score × amount_used) Subject to: Σ(price × amount) ≤ ₹200</span>
+</div>
+<div class="prob-item">
+  <h4>&#9313; Local vs Global Minimum</h4>
+  <p>You are adjusting the sugar in a recipe. At 2 spoons it tastes ok (local minimum). At 4 spoons it tastes perfect (global minimum). Why might an AI get stuck at 2 spoons?</p>
+  <span class="mono">Because nearby both directions taste worse than 2 spoons — the AI sees a valley and stops, missing the deeper valley at 4.</span>
+</div>
+<div class="prob-item">
+  <h4>&#9314; Constraints</h4>
+  <p>A delivery driver must visit 5 houses in a city. The goal is minimum total distance. What are possible constraints?</p>
+  <span class="mono">Must visit all 5 houses. Must return to start. Roads are one-way. Max 4 hours. This is the famous "Travelling Salesman Problem!"</span>
+</div>
+<div class="ai-box">
+  <h4>&#129504; How AI Uses Optimization</h4>
+  <ul>
+    <li><strong>Training</strong> — Finding weights that minimize loss (the core of all deep learning)</li>
+    <li><strong>Hyperparameter tuning</strong> — Choosing the best model architecture</li>
+    <li><strong>Reinforcement Learning</strong> — Maximizing cumulative reward over time</li>
+    <li><strong>Logistics</strong> — Amazon/FedEx route optimization saves billions per year</li>
+    <li><strong>Drug Discovery</strong> — Finding molecules that maximize therapeutic effect</li>
+  </ul>
+</div>
+<div class="ai-real">
+  <h4>&#127758; Real AI Example</h4>
+  <p><strong>DeepMind&rsquo;s AlphaFold (2020):</strong> Solved the 50-year-old protein folding problem by optimizing the 3D positions of amino acids to minimize an energy function. The search space has more configurations than atoms in the universe. AlphaFold&rsquo;s optimization algorithms found the correct fold for nearly every known protein in hours — a discovery worth a Nobel Prize.</p>
+</div>
+</div>
+<div class="pg-footer"><span>Page 14</span><span>&#9670;</span><span>Chapter IV — Problems &amp; AI</span></div>
+</div>
+
+<!-- P14: FINALE -->
+<div class="page dark-page" id="p14">
+<div class="pg-grid"></div>
+<div class="final-pg">
+<div class="final-icon">&#127775;</div>
+<div class="final-title">You Now Think Like an AI Builder</div>
+<div class="ch-divider"></div>
+<div class="final-text">Every time you pack a suitcase, you optimize. Every time you taste and adjust a recipe, you compute gradients. Every time you update your opinion after new information, you apply Bayes. Every time you describe something with a list of features, you think in vectors.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:460px;margin-bottom:24px;text-align:left">
+  <div style="background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);border-radius:8px;padding:12px">
+    <div style="font-size:clamp(9px,2vw,10px);letter-spacing:2px;color:var(--cyan);text-transform:uppercase;font-weight:600;margin-bottom:6px">&#129516; Chapter I</div>
+    <div style="font-size:clamp(11px,3vw,13px);color:var(--text2)">Data as vectors &amp; matrices</div>
+  </div>
+  <div style="background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);border-radius:8px;padding:12px">
+    <div style="font-size:clamp(9px,2vw,10px);letter-spacing:2px;color:var(--cyan);text-transform:uppercase;font-weight:600;margin-bottom:6px">&#9956; Chapter II</div>
+    <div style="font-size:clamp(11px,3vw,13px);color:var(--text2)">Learning from errors</div>
+  </div>
+  <div style="background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);border-radius:8px;padding:12px">
+    <div style="font-size:clamp(9px,2vw,10px);letter-spacing:2px;color:var(--cyan);text-transform:uppercase;font-weight:600;margin-bottom:6px">&#127922; Chapter III</div>
+    <div style="font-size:clamp(11px,3vw,13px);color:var(--text2)">Reasoning under uncertainty</div>
+  </div>
+  <div style="background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);border-radius:8px;padding:12px">
+    <div style="font-size:clamp(9px,2vw,10px);letter-spacing:2px;color:var(--cyan);text-transform:uppercase;font-weight:600;margin-bottom:6px">&#127919; Chapter IV</div>
+    <div style="font-size:clamp(11px,3vw,13px);color:var(--text2)">Finding the best solution</div>
+  </div>
+</div>
+<div class="final-text" style="font-size:clamp(12px,3vw,14px);opacity:.65">&ldquo;Mathematics is the language in which God has written the universe.&rdquo; — Galileo Galilei</div>
+<button class="back-btn" onclick="backToCover()">&#8617; Return to Cover</button>
+</div>
+<div class="pg-footer" style="border-top-color:rgba(0,180,216,.15);color:var(--cyan)"><span>The End</span><span>&#9670;</span><span>The Math Behind AI</span></div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+<button class="nav-btn" id="prevBtn" onclick="turn(-1)" disabled>&#9664; Prev</button>
+<div class="nav-prog" id="prog">Page 1 / 15</div>
+<button class="nav-btn" id="nextBtn" onclick="turn(1)">Next &#9654;</button>
+</div>
+
+</div><!-- /book -->
+
+<script>
+var T=15,c=0;
+function openBook(){document.getElementById('cover').style.display='none';document.getElementById('book').style.display='block';upd();}
+function backToCover(){document.getElementById('book').style.display='none';document.getElementById('cover').style.display='block';c=0;}
+function goTo(n){document.getElementById('p'+c).classList.remove('active');c=n;document.getElementById('p'+c).classList.add('active');upd();window.scrollTo({top:0,behavior:'smooth'});}
+function turn(d){var n=c+d;if(n>=0&&n<T)goTo(n);}
+function upd(){document.getElementById('prevBtn').disabled=c===0;document.getElementById('nextBtn').disabled=c===T-1;document.getElementById('prog').textContent='Page '+(c+1)+' / '+T;}
+</script>
+</body>
+</html>
